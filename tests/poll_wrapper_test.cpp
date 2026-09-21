@@ -84,15 +84,23 @@ void expect_epoll_readable() {
 void expect_epoll_invalid_argument() {
   poll_wrapper::epoll ep;
 
-  bool thrown = false;
+  bool invalid_size_thrown = false;
   try {
     struct epoll_event event {};
     (void)ep.wait(&event, 0, 0);
   } catch (const std::invalid_argument&) {
-    thrown = true;
+    invalid_size_thrown = true;
   }
 
-  assert(thrown);
+  bool null_events_thrown = false;
+  try {
+    (void)ep.wait(nullptr, 1, 0);
+  } catch (const std::invalid_argument&) {
+    null_events_thrown = true;
+  }
+
+  assert(invalid_size_thrown);
+  assert(null_events_thrown);
 }
 
 }  // namespace

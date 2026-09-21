@@ -79,6 +79,9 @@ class epoll {
     if (max_events <= 0) {
       throw std::invalid_argument("max_events must be positive");
     }
+    if (events == nullptr) {
+      throw std::invalid_argument("events must not be null");
+    }
     const int rc = ::epoll_wait(fd_, events, max_events, timeout_ms);
     if (rc < 0) {
       throw_system_error("epoll_wait");
