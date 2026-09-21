@@ -27,7 +27,7 @@ inline int poll_wait(struct pollfd* fds, nfds_t count, int timeout_ms) {
 }
 
 inline int poll_wait(std::vector<struct pollfd>& fds, int timeout_ms) {
-  return poll_wait(fds.data(), fds.size(), timeout_ms);
+  return poll_wait(fds.empty() ? nullptr : fds.data(), fds.size(), timeout_ms);
 }
 
 class epoll {
@@ -76,6 +76,9 @@ class epoll {
   }
 
   int wait(struct epoll_event* events, int max_events, int timeout_ms) {
+    if (max_events <= 0) {
+      throw std::invalid_argument("max_events must be positive");
+    }
     const int rc = ::epoll_wait(fd_, events, max_events, timeout_ms);
     if (rc < 0) {
       throw_system_error("epoll_wait");
