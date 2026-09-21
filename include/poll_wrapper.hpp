@@ -19,11 +19,15 @@ inline void throw_system_error(const char* what) {
 }
 
 inline int poll_wait(struct pollfd* fds, nfds_t count, int timeout_ms) {
-  const int rc = ::poll(fds, count, timeout_ms);
-  if (rc < 0) {
-    throw_system_error("poll");
+  for (;;) {
+    const int rc = ::poll(fds, count, timeout_ms);
+    if (rc >= 0) {
+      return rc;
+    }
+    if (errno != EINTR) {
+      throw_system_error("poll");
+    }
   }
-  return rc;
 }
 
 inline int poll_wait(std::vector<struct pollfd>& fds, int timeout_ms) {
@@ -82,11 +86,15 @@ class epoll {
     if (events == nullptr) {
       throw std::invalid_argument("events must not be null");
     }
-    const int rc = ::epoll_wait(fd_, events, max_events, timeout_ms);
-    if (rc < 0) {
-      throw_system_error("epoll_wait");
+    for (;;) {
+      const int rc = ::epoll_wait(fd_, events, max_events, timeout_ms);
+      if (rc >= 0) {
+        return rc;
+      }
+      if (errno != EINTR) {
+        throw_system_error("epoll_wait");
+      }
     }
-    return rc;
   }
 
   std::vector<struct epoll_event> wait(int max_events, int timeout_ms) {
