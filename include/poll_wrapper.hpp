@@ -2,6 +2,7 @@
 
 #include <cerrno>
 #include <cstdint>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <system_error>
@@ -102,10 +103,9 @@ class epoll {
       throw std::invalid_argument("max_events must be positive");
     }
 
-    std::vector<struct epoll_event> events(static_cast<std::size_t>(max_events));
-    const int ready = wait(events.data(), max_events, timeout_ms);
-    events.resize(static_cast<std::size_t>(ready));
-    return events;
+    std::unique_ptr<struct epoll_event[]> events(new struct epoll_event[static_cast<std::size_t>(max_events)]);
+    const int ready = wait(events.get(), max_events, timeout_ms);
+    return std::vector<struct epoll_event>(events.get(), events.get() + ready);
   }
 
  private:
